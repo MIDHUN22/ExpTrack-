@@ -2,6 +2,12 @@ from django.shortcuts import render
 from django.http import HttpResponse
 
 # Create your views here.
+def login(request):
+    return render(request,"auth/login.html")
+
+def register(request):
+    return render(request,"register.html")
+    
 def home(request):
     context = {
         "name": "Midhun"
@@ -14,3 +20,5 @@ def dashboard(request):
         "need":"project"
     }
     return render(request,"dashboard.html",context)
+
+

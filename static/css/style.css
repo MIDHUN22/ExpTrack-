@@ -1,0 +1,106 @@
+/* ==========================================
+   Variables
+========================================== */
+
+:root {
+    --sidebar-width: 250px;
+}
+
+/* ==========================================
+   General
+========================================== */
+
+body {
+    background-color: #f8f9fa;
+}
+
+/* ==========================================
+   Sidebar
+========================================== */
+
+.sidebar {
+    width: var(--sidebar-width);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    background-color: #212529;
+}
+
+/* ==========================================
+   Main Content
+========================================== */
+
+.main-content {
+    margin-left: var(--sidebar-width);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ==========================================
+   Footer
+========================================== */
+
+.footer {
+    margin-top: auto;
+}
+
+/* ==========================================
+   Dashboard Cards
+========================================== */
+
+.card {
+    border: none;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.15);
+}
+
+.card-body {
+    padding: 1.5rem;
+    min-height: 130px;
+}
+
+.card h6 {
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+}
+
+.card h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+/* Card Icons */
+
+.card i {
+    font-size: 2.5rem;
+    opacity: 0.75;
+}
+
+/* Login Page */
+
+body {
+    background: #f5f7fb;
+}
+
+.form-control {
+    border-radius: 10px;
+    padding: 0.75rem;
+}
+
+.btn-primary {
+    border-radius: 10px;
+    padding: 0.75rem;
+}
+
+.card {
+    border-radius: 20px;
+}

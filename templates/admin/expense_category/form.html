@@ -1,11 +1,52 @@
-<form method="POST">
-    {% csrf_token %}
-    <div class="row">
-        <div class="col">
-            <input type="text" class="form-control" placeholder="">
-        </div>
-        <div class="col">
-            <input type="text" class="form-control" placeholder="Last name">
-        </div>
+{% extends 'admin/base.html' %}
+
+{% block content %}
+
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h4>Add Expense Category</h4>
     </div>
-</form>
+
+    <div class="card-body">
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label">Category Name</label>
+                {{ form.name }}
+                {{ form.name.errors }}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                {{ form.description }}
+                {{ form.description.errors }}
+            </div>
+
+            <div class="form-check mb-3">
+                {{ form.is_active }}
+                <label class="form-check-label">
+                    Active
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn-success">
+                Save
+            </button>
+
+            <a href="{% url 'expense_category_list' %}" class="btn btn-secondary">
+                Cancel
+            </a>
+            {% if form.instance.pk %}
+            <a href="{% url 'expense_category_delete' form.instance.id %}" class="btn btn-danger">
+                Delete
+            </a>
+            {% endif %}
+
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}

@@ -1,5 +1,7 @@
-from django.shortcuts import render, redirect
-from .forms import RegisterForm, LoginForm,IncomeCategoryForm, ExpenseCategoryForm
+from django.shortcuts import render, redirect,get_object_or_404
+from .forms import RegisterForm, LoginForm,IncomeCategoryForm, ExpenseCategoryForm, UserEditForm
+from django.db.models import Sum
+from .utils import export_to_csv
 from .models import User,IncomeCategory,ExpenseCategory,Income,Expense
 from django.contrib import messages
 from django.contrib.auth import authenticate, login,logout
@@ -82,20 +84,118 @@ def dashboard(request):
     })
 
 @login_required(login_url="login")
+
 def adminDashboard(request):
-    return render(request, "admin/dashboard.html", {
-        "message": "Under Development",
-    })
+    if not request.user.is_staff:
+        return HttpResponseForbidden("Permission denied")
+
+    total_users = User.objects.count()
+    total_income_categories = IncomeCategory.objects.count()
+    total_expense_categories = ExpenseCategory.objects.count()
+    active_users = User.objects.filter(is_active=True).count()
+
+    total_income = Income.objects.aggregate(
+        total=Sum("amount")
+    )["total"] or 0
+
+    total_expense = Expense.objects.aggregate(
+        total=Sum("amount")
+    )["total"] or 0
+
+    context = {
+        "total_users": total_users,
+        "total_income_categories": total_income_categories,
+        "total_expense_categories": total_expense_categories,
+        "total_income": total_income,
+        "total_expense": total_expense,
+        "balance": total_income - total_expense,
+        "active_users": User.objects.filter(is_staff=False, is_active=True).count(),
+    }
+
+    return render(request, "admin/dashboard.html", context)
 @login_required(login_url="login")
+
 def logout_view(request):
     logout(request)
     messages.success(request, "Logged out successfully.")
     return redirect("login")
-#_________________________________________admin_views___________________________________
+#_________________________________________ADMIN VIEWS___________________________________
+
+def get_all_users(request):
+    if not request.user.is_staff:
+        return HttpResponseForbidden("Permission denied")
+
+    exp_users = User.objects.all()
+
+    return render(
+        request,
+        "admin/all_users/list.html",
+        {"exp_users": exp_users}
+    )
+
+
+def user_edit(request, id):
+
+    if not request.user.is_staff:
+        return HttpResponseForbidden("Permission denied")
+
+    user = get_object_or_404(User, id=id)
+
+    if request.method == "POST":
+
+        form = UserEditForm(request.POST, instance=user)
+
+        if form.is_valid():
+            form.save()
+            return redirect("all_users")
+
+    else:
+        form = UserEditForm(instance=user)
+
+    return render(
+        request,
+        "admin/all_users/edit.html",
+        {
+            "form": form
+        }
+    )
+
+def user_toggle(request, id):
+    if not request.user.is_staff:
+        return HttpResponseForbidden("Permission denied")
+
+    user = get_object_or_404(User, id=id)
+
+    # Prevent disabling yourself
+    if user == request.user:
+        return redirect("all_users")
+
+    user.is_active = not user.is_active
+    user.save()
+
+    return redirect("all_users")
+
+def user_delete(request, id):
+
+    if not request.user.is_staff:
+        return HttpResponseForbidden("Permission denied")
+
+    user = get_object_or_404(User, id=id)
+
+    if request.method == "POST":
+        user.delete()
+        return redirect("all_users")
+
+    return render(
+        request,
+        "admin/all_users/delete.html",
+        {"user": user}
+    )
+
 def income_category_list(request):
     if not request.user.is_staff:
         return HttpResponseForbidden("Permission denied")
-    categories = IncomeCategory.objects.all()
+    categories = IncomeCategory.objects.all().order_by("id")
 
     return render(
         request,
@@ -125,28 +225,187 @@ def income_category_add(request):
     )
 
 
-def income_category_edit(request,id):
+# def income_category_edit(request,id):
+#     if not request.user.is_staff:
+#         return HttpResponseForbidden("Permission denied")
+#     if request.method == "POST":
+#         print(request.POST)
+
+def income_category_edit(request, id):
+
+    category = get_object_or_404(IncomeCategory, id=id)
+
+    if request.method == "POST":
+        form = IncomeCategoryForm(request.POST, instance=category)
+
+        if form.is_valid():
+            form.save()
+            return redirect("income_category_list")
+
+    else:
+        form = IncomeCategoryForm(instance=category)
+
+    return render(
+        request,
+        "admin/income_category/form.html",
+        {"form": form}
+    )
+
+def income_category_toggle(request, id):
+
+    if not request.user.is_staff:
+        return HttpResponseForbidden("Permission Denied")
+
+    category = get_object_or_404(IncomeCategory, id=id)
+
+    category.is_active = not category.is_active
+    category.save()
+
+    return redirect("income_category_list")
+
+def income_category_delete(request, id):
     if not request.user.is_staff:
         return HttpResponseForbidden("Permission denied")
 
-def income_category_delete(request,id):
+    category = get_object_or_404(IncomeCategory, id=id)
+
+    if request.method == "POST":
+        category.delete()
+        return redirect("income_category_list")
+
+    return render(
+        request,
+        "admin/income_category/delete.html",
+        {"category": category}
+    )
+
+
+def income_category_export(request):
     if not request.user.is_staff:
         return HttpResponseForbidden("Permission denied")
+
+    categories = IncomeCategory.objects.order_by("id")
+
+    return export_to_csv(
+        filename="income_categories",
+        headers=[
+            "ID",
+            "Category",
+            "Description",
+            "Status",
+            "Created At",
+            "Updated At",
+        ],
+        queryset=categories,
+        row_builder=lambda c: [
+            c.id,
+            c.name,
+            c.description,
+            "Active" if c.is_active else "Inactive",
+            c.created_at.strftime("%d-%m-%Y"),
+            c.updated_at.strftime("%d-%m-%Y"),
+        ],
+    )
 
 def expense_category_list(request):
     if not request.user.is_staff:
         return HttpResponseForbidden("Permission denied")
-    else:
-        return render(request,"admin/expense_category/list.html")
+    categories = ExpenseCategory.objects.all().order_by("id")
 
+    return render(
+        request,
+        "admin/expense_category/list.html",
+        {"categories": categories}
+    )
+ 
 def expense_category_add(request):
     if not request.user.is_staff:
         return HttpResponseForbidden("Permission denied")
 
+    if request.method == "POST":
+        form = ExpenseCategoryForm(request.POST)
+
+        if form.is_valid():
+            form.save()
+            return redirect("expense_category_list")
+
+    else:
+        form = ExpenseCategoryForm()
+
+    return render(
+        request,
+        "admin/expense_category/form.html",
+        {"form": form}
+    )
+
 def expense_category_edit(request,id):
+    category = get_object_or_404(ExpenseCategory, id=id)
+
+    if request.method == "POST":
+        form = ExpenseCategoryForm(request.POST, instance=category)
+
+        if form.is_valid():
+            form.save()
+            return redirect("expense_category_list")
+
+    else:
+        form = ExpenseCategoryForm(instance=category)
+
+    return render(
+        request,
+        "admin/expense_category/form.html",
+        {"form": form}
+    )
+def expense_category_delete(request, id):
     if not request.user.is_staff:
         return HttpResponseForbidden("Permission denied")
 
-def expense_category_delete(request,id):
+    category = get_object_or_404(ExpenseCategory, id=id)
+
+    if request.method == "POST":
+        category.delete()
+        return redirect("expense_category_list")
+
+    return render(
+        request,
+        "admin/expense_category/delete.html",
+        {"category": category}
+    )
+
+def expense_category_toggle(request,id):
+    if not request.user.is_staff:
+        return HttpResponseForbidden("Permission Denied")
+
+    category = get_object_or_404(ExpenseCategory, id=id)
+
+    category.is_active = not category.is_active
+    category.save()
+
+    return redirect("expense_category_list")
+
+def expense_category_export(request):
     if not request.user.is_staff:
         return HttpResponseForbidden("Permission denied")
+
+    categories = ExpenseCategory.objects.order_by("id")
+
+    return export_to_csv(
+        filename="expense_categories",
+        headers=[
+            "ID",
+            "Category",
+            "Description",
+            "Status",
+            "Created At",
+            "Updated At",
+        ],
+        queryset=categories,
+        row_builder=lambda c: [
+            c.id,
+            c.name,
+            c.description,
+            "Active" if c.is_active else "Inactive",
+            c.created_at.strftime("%d-%m-%Y"),
+            c.updated_at.strftime("%d-%m-%Y"),
+        ],
+    )

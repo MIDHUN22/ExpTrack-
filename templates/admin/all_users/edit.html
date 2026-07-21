@@ -1,0 +1,72 @@
+{% extends 'admin/base.html' %}
+
+{% block content %}
+
+<div class="card shadow-sm">
+
+    <div class="card-header">
+        <h3>Edit User</h3>
+    </div>
+
+    <div class="card-body">
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label">First Name</label>
+                {{ form.first_name }}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Last Name</label>
+                {{ form.last_name }}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                {{ form.username }}
+                <small class="text-muted">
+                    Username cannot be changed.
+                </small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                {{ form.email }}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Phone</label>
+                {{ form.phone }}
+            </div>
+
+            <button type="submit" class="btn btn-success">
+                Save
+            </button>
+
+            <a href="{% url 'all_users' %}" class="btn btn-secondary">
+                Cancel
+            </a>
+
+            {% if form.instance.is_active %}
+            <a href="{% url 'user_toggle' form.instance.id %}" class="btn btn-warning">
+                Deactivate User
+            </a>
+            {% else %}
+            <a href="{% url 'user_toggle' form.instance.id %}" class="btn btn-success">
+                Activate User
+            </a>
+            {% endif %}
+
+            <a href="{% url 'user_delete' form.instance.id %}" class="btn btn-danger float-end">
+                Delete User
+            </a>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

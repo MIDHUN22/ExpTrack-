@@ -38,7 +38,11 @@
             <a href="{% url 'income_category_list' %}" class="btn btn-secondary">
                 Cancel
             </a>
-
+            {% if form.instance.pk %}
+            <a href="{% url 'income_category_delete' form.instance.id %}" class="btn btn-danger">
+                Delete
+            </a>
+            {% endif %}
         </form>
 
     </div>

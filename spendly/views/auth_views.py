@@ -1,11 +1,9 @@
 from django.shortcuts import render, redirect
-from .forms import RegisterForm, LoginForm,IncomeCategoryForm, ExpenseCategoryForm
-from .models import User,IncomeCategory,ExpenseCategory,Income,Expense
+from .forms import RegisterForm, LoginForm
+from .models import User
 from django.contrib import messages
 from django.contrib.auth import authenticate, login,logout
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
-
 
 
 def login_view(request):
@@ -91,62 +89,3 @@ def logout_view(request):
     logout(request)
     messages.success(request, "Logged out successfully.")
     return redirect("login")
-#_________________________________________admin_views___________________________________
-def income_category_list(request):
-    if not request.user.is_staff:
-        return HttpResponseForbidden("Permission denied")
-    categories = IncomeCategory.objects.all()
-
-    return render(
-        request,
-        "admin/income_category/list.html",
-        {"categories": categories}
-    )
-    
-
-def income_category_add(request):
-    if not request.user.is_staff:
-        return HttpResponseForbidden("Permission denied")
-
-    if request.method == "POST":
-        form = IncomeCategoryForm(request.POST)
-
-        if form.is_valid():
-            form.save()
-            return redirect("income_category_list")
-
-    else:
-        form = IncomeCategoryForm()
-
-    return render(
-        request,
-        "admin/income_category/form.html",
-        {"form": form}
-    )
-
-
-def income_category_edit(request,id):
-    if not request.user.is_staff:
-        return HttpResponseForbidden("Permission denied")
-
-def income_category_delete(request,id):
-    if not request.user.is_staff:
-        return HttpResponseForbidden("Permission denied")
-
-def expense_category_list(request):
-    if not request.user.is_staff:
-        return HttpResponseForbidden("Permission denied")
-    else:
-        return render(request,"admin/expense_category/list.html")
-
-def expense_category_add(request):
-    if not request.user.is_staff:
-        return HttpResponseForbidden("Permission denied")
-
-def expense_category_edit(request,id):
-    if not request.user.is_staff:
-        return HttpResponseForbidden("Permission denied")
-
-def expense_category_delete(request,id):
-    if not request.user.is_staff:
-        return HttpResponseForbidden("Permission denied")

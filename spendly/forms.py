@@ -1,5 +1,6 @@
 from django import forms
 from django.forms import ValidationError
+from .models import IncomeCategory, ExpenseCategory
 
 def validate_name(value):
     if len(value.strip()) < 2:
@@ -41,3 +42,46 @@ class LoginForm(forms.Form):
             "placeholder": "Enter your password"
         })
     )
+
+# ****************************************************Admin Form*****************
+class IncomeCategoryForm(forms.ModelForm):
+    class Meta:
+        model=IncomeCategory
+        fields=["name","description","is_active"]
+        widgets={
+            "name":forms.TextInput(attrs={
+                "class":"form-control",
+                "placeholder":"Enter An Income Category"
+            }),
+            "description":forms.Textarea(attrs={
+                "class":"form-control",
+                "rows":3,
+                "placeholder":"Enter a Meaningfull Description(optional)"
+            }),
+            "is_active": forms.CheckboxInput(attrs={
+                "class": "form-check-input"}) 
+            
+            }
+
+class ExpenseCategoryForm(forms.ModelForm):
+
+    class Meta:
+        model = ExpenseCategory
+        fields = ["name", "description", "is_active"]
+
+        widgets = {
+            "name": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Enter expense category"
+            }),
+
+            "description": forms.Textarea(attrs={
+                "class": "form-control",
+                "rows": 3,
+                "placeholder": "Enter a short description"
+            }),
+
+            "is_active": forms.CheckboxInput(attrs={
+                "class": "form-check-input"
+            }),
+        }

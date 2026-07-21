@@ -104,3 +104,10 @@ body {
 .card {
     border-radius: 20px;
 }
+
+.description-column {
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

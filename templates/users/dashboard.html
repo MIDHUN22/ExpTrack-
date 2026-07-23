@@ -6,7 +6,7 @@
             <div class="card-body d-flex justify-content-between align-items-center">
                 <div>
                     <h6 class="text-white-50 mb-2">Available Balance</h6>
-                    <h3 class="fw-bold mb-0">₹{{total_balance}}</h3>
+                    <h3 class="fw-bold mb-0">₹{{available_balance}}</h3>
                 </div>
                 <i class="bi bi-wallet2 fs-1 opacity-75"></i>
             </div>
@@ -18,7 +18,7 @@
         <div class="card bg-success text-white shadow-sm h-100">
             <div class="card-body d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="text-white-50 mb-2">Incomed</h6>
+                    <h6 class="text-white-50 mb-2">Income</h6>
                     <h3 class="fw-bold mb-0">₹{{total_income}}</h3>
                 </div>
                 <i class="bi bi-cash-stack fs-1 opacity-75"></i>
@@ -44,14 +44,93 @@
         <div class="card bg-warning text-dark shadow-sm h-100">
             <div class="card-body d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="text-dark-emphasis mb-2">Savings</h6>
-                    <h3 class="fw-bold mb-0">₹35,000</h3>
+                    <h6 class="text-dark-emphasis mb-2">Transactions</h6>
+                    <h3 class="fw-bold mb-0">{{total_transactions}}</h3>
                 </div>
-                <i class="bi bi-piggy-bank fs-1 opacity-75"></i>
+                <i class="bi bi-arrow-down-up fs-1 opacity-75"></i>
+            </div>
+        </div>
+    </div>
+    <hr>
+
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Income by Category</h5>
+            </div>
+            <div class="card-body">
+                <div style="position: relative; height: 220px;">
+                    <canvas id="incomeChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Expense by Category -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Expense by Category</h5>
+            </div>
+            <div class="card-body">
+                <div style="position: relative; height: 220px;">
+                    <canvas id="expenseChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+<script>
 
+    const incomeLabels = {{ income_labels| safe }};
+    const incomeTotals = {{ income_totals| safe }};
+
+    const expenseLabels = {{ expense_labels| safe }};
+    const expenseTotals = {{ expense_totals| safe }};
+
+    new Chart(
+        document.getElementById("incomeChart"),
+        {
+            type: "doughnut",
+            data: {
+                labels: incomeLabels,
+                datasets: [{
+                    data: incomeTotals
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "bottom"
+                    }
+                }
+            }
+        }
+    );
+
+    new Chart(
+        document.getElementById("expenseChart"),
+        {
+            type: "doughnut",
+            data: {
+                labels: expenseLabels,
+                datasets: [{
+                    data: expenseTotals
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "bottom"
+                    }
+                }
+            }
+        }
+    );
+
+</script>
 {% endblock %}

@@ -1,12 +1,14 @@
 from django.shortcuts import render, redirect,get_object_or_404
 from .forms import RegisterForm, LoginForm,IncomeCategoryForm, ExpenseCategoryForm, UserEditForm,IncomeForm,ExpenseForm
-from django.db.models import Sum
+from django.db.models import Sum,Count
+from decimal import Decimal
 from .utils import export_to_csv
 from .models import User,IncomeCategory,ExpenseCategory,Income,Expense
 from django.contrib import messages
 from django.contrib.auth import authenticate, login,logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
+from django.db.models.functions import Coalesce
 
 
 
@@ -77,34 +79,8 @@ def register(request):
     return render(request, "auth/register.html", {"form": form})
 
 
+
 @login_required(login_url="login")
-def dashboard(request):
-
-    total_income = (
-        Income.objects.filter(user=request.user)
-        .aggregate(total=Sum("amount"))["total"]
-        or Decimal("0.00")
-    )
-
-    total_expense = (
-        Expense.objects.filter(user=request.user)
-        .aggregate(total=Sum("amount"))["total"]
-        or Decimal("0.00")
-    )
-
-    total_balance = total_income - total_expense
-
-    return render(
-        request,
-        "users/dashboard.html",
-        {
-            "total_income": total_income,
-            "total_expense": total_expense,
-            "total_balance": total_balance,
-        },
-    )
-@login_required(login_url="login")
-
 def adminDashboard(request):
     if not request.user.is_staff:
         return HttpResponseForbidden("Permission denied")
@@ -434,6 +410,77 @@ def expense_category_export(request):
         ],
     )
 # ------------------------------------------------- USER VIEWS---------------------------------
+
+@login_required(login_url="login")
+def dashboard(request):
+
+    # Total Income
+    total_income = (
+        Income.objects
+        .filter(user=request.user)
+        .aggregate(total=Coalesce(Sum("amount"), Decimal("0.00")))
+    )["total"]
+
+    total_transactions = Expense.objects.filter(
+        user=request.user
+    ).count()
+
+    # Total Expense
+    total_expense = (
+        Expense.objects
+        .filter(user=request.user)
+        .aggregate(total=Coalesce(Sum("amount"), Decimal("0.00")))
+    )["total"]
+
+    # Available Balance
+    available_balance = total_income - total_expense
+
+    # Income by Category (Chart)
+    income_by_category = (
+        Income.objects
+        .filter(user=request.user)
+        .values("category__name")
+        .annotate(total=Sum("amount"))
+        .order_by("category__name")
+    )
+
+    income_labels = []
+    income_totals = []
+
+    for item in income_by_category:
+        income_labels.append(item["category__name"])
+        income_totals.append(float(item["total"]))
+
+    # Expense by Category (Chart)   ← NEW
+    expense_by_category = (
+        Expense.objects
+        .filter(user=request.user)
+        .values("category__name")
+        .annotate(total=Sum("amount"))
+        .order_by("category__name")
+    )
+
+    expense_labels = []
+    expense_totals = []
+
+    for item in expense_by_category:
+        expense_labels.append(item["category__name"])
+        expense_totals.append(float(item["total"]))
+
+    context = {
+        "total_income": total_income,
+        "total_expense": total_expense,
+        "available_balance": available_balance,
+        "total_transactions": total_transactions,
+        "income_labels": income_labels,
+        "income_totals": income_totals,
+        "expense_labels": expense_labels,   # ← NEW
+        "expense_totals": expense_totals,   # ← NEW
+    }
+
+    return render(request, "users/dashboard.html", context)
+
+
 @login_required(login_url="login")
 def income(request):
     incomes = Income.objects.filter(
@@ -497,7 +544,30 @@ def income_delete(request,id):
         "users/income/list.html",
         {"income":income}
     )
-    
+
+def income_export(request):
+   
+    incomes = Income.objects.filter(user=request.user).order_by("id")
+    return export_to_csv(
+        filename="income",
+        headers=[
+            "ID",
+            "Amount",
+            "Description",
+            "Date",
+            "Created At",
+            "Updated At",
+        ],
+        queryset=incomes,
+        row_builder=lambda c: [
+            c.id,
+            c.amount,
+            c.description,
+            c.date,
+            c.created_at.strftime("%d-%m-%Y"),
+            c.updated_at.strftime("%d-%m-%Y"),
+        ],
+    )    
 
 @login_required(login_url="login")
 def expense(request):
@@ -574,6 +644,30 @@ def expense_delete(request,id):
         expense.delete()
 
     return redirect("expense_list")
+
+def expense_export(request):
+   
+    expenses = Expense.objects.filter(user=request.user).order_by("id")
+    return export_to_csv(
+        filename="expense",
+        headers=[
+            "ID",
+            "Amount",
+            "Description",
+            "Date",
+            "Created At",
+            "Updated At",
+        ],
+        queryset=expenses,
+        row_builder=lambda c: [
+            c.id,
+            c.amount,
+            c.description,
+            c.date,
+            c.created_at.strftime("%d-%m-%Y"),
+            c.updated_at.strftime("%d-%m-%Y"),
+        ],
+    )  
 
 def savings_list(request):
     pass

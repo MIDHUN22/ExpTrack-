@@ -33,11 +33,14 @@ urlpatterns = [
     path("income/add/",views.income_add,name="income_add"),
     path("income/edit/<int:id>/",views.income_edit,name="income_edit"),
     path("income/delete/<int:id>/",views.income_delete,name="income_delete"),
+    path("income-export",views.income_export,name="income_export"),
 
     path("expense/",views.expense,name="expense_list"),
     path("expense/add/",views.expense_add,name="expense_add"),
     path("expense/edit/<int:id>/",views.expense_edit,name="expense_edit"),
     path("expense/delete/<int:id>/",views.expense_delete,name="expense_delete"),
+    path("expense-export",views.expense_export,name="expense_export"),
+
 
 
 

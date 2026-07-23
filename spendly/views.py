@@ -416,12 +416,14 @@ def expense_category_export(request):
 # ------------------------------------------------- USER VIEWS---------------------------------
 @login_required(login_url="login")
 def income(request):
-    incomes=Income.object.all().order_by("id")
+    incomes = Income.objects.filter(
+        user=request.user
+    ).order_by("id")
 
     return render(
         request,
         "user/income/list.html",
-        {"incomes":income}
+        {"incomes":incomes}
     )
     pass
 
@@ -458,7 +460,7 @@ def income_edit(request,id):
     return render(
         request,
         "user/income/form.html",
-        {{"form":form}}
+        {"form":form}
     )
     
 
@@ -552,3 +554,15 @@ def expense_delete(request, id):
         expense.delete()
 
     return redirect("expense_list")
+
+def savings_list(request):
+    pass
+
+def savings_add(request):
+    pass
+
+def savings_edit(request):
+    pass
+
+def savings_delete(request):
+    pass

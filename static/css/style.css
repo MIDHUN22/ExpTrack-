@@ -111,3 +111,11 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+.admin-main-content-area {
+    background-color: #d7e3f7;
+}
+
+.user-main-content-area {
+    background-color: #d0d1d3;
+}

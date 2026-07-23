@@ -232,6 +232,8 @@ def income_category_add(request):
 #         print(request.POST)
 
 def income_category_edit(request, id):
+    if not request.user.is_staff:
+        return HttpResponseForbidden("Permission denied")
 
     category = get_object_or_404(IncomeCategory, id=id)
 
@@ -339,6 +341,8 @@ def expense_category_add(request):
     )
 
 def expense_category_edit(request,id):
+    if not request.user.is_staff:
+        return HttpResponseForbidden("Permission denied")
     category = get_object_or_404(ExpenseCategory, id=id)
 
     if request.method == "POST":
@@ -409,3 +413,142 @@ def expense_category_export(request):
             c.updated_at.strftime("%d-%m-%Y"),
         ],
     )
+# ------------------------------------------------- USER VIEWS---------------------------------
+@login_required(login_url="login")
+def income(request):
+    incomes=Income.object.all().order_by("id")
+
+    return render(
+        request,
+        "user/income/list.html",
+        {"incomes":income}
+    )
+    pass
+
+@login_required(login_url="login")
+def income_add(request):
+    if request.method=="POST":
+        form=IncomeForm(request.POST)
+    
+        if form.is_valid():
+            income = form.save(commit=False)
+            income.user = request.user
+            income.save()
+            return redirect("income_list")
+    else:
+        form=IncomeForm()
+    return render(
+        request,
+        'user/income/form.html',
+        {"form":form}
+        )
+    
+@login_required(login_url="login")
+def income_edit(request,id):
+    income=get_object_or_404(Income,id=id, user=request.user)
+
+    if request.method=='POST':
+        form=IncomeForm(request.POST,instance=income)
+
+        if form.is_valid():
+            form.save()
+            return redirect("income_list")
+    else:
+        form=IncomeForm(instance=income)
+    return render(
+        request,
+        "user/income/form.html",
+        {{"form":form}}
+    )
+    
+
+@login_required(login_url="login")
+def income_delete(request,id):
+    income=get_object_or_404(Income,id=id, user=request.user)
+
+    if request.method=="POST":
+        income.delete()
+        return redirect("income_list")
+
+    return render(
+        request,
+        "user/income/list.html",
+        {"income":income}
+    )
+    
+
+@login_required(login_url="login")
+def expense(request):
+    expenses = Expense.objects.filter(
+        user=request.user
+    ).order_by("-date")
+
+    return render(
+        request,
+        "user/expense/list.html",
+        {"expenses": expenses}
+    )
+
+
+@login_required(login_url="login")
+def expense_add(request):
+
+    if request.method == "POST":
+        form = ExpenseForm(request.POST)
+
+        if form.is_valid():
+            expense = form.save(commit=False)
+            expense.user = request.user
+            expense.save()
+
+            return redirect("expense_list")
+
+    else:
+        form = ExpenseForm()
+
+    return render(
+        request,
+        "user/expense/form.html",
+        {"form": form}
+    )
+
+
+@login_required(login_url="login")
+def expense_edit(request, id):
+
+    expense = get_object_or_404(
+        Expense,
+        id=id,
+        user=request.user
+    )
+
+    if request.method == "POST":
+        form = ExpenseForm(request.POST, instance=expense)
+
+        if form.is_valid():
+            form.save()
+            return redirect("expense_list")
+
+    else:
+        form = ExpenseForm(instance=expense)
+
+    return render(
+        request,
+        "user/expense/form.html",
+        {"form": form}
+    )
+
+
+@login_required(login_url="login")
+def expense_delete(request, id):
+
+    expense = get_object_or_404(
+        Expense,
+        id=id,
+        user=request.user
+    )
+
+    if request.method == "POST":
+        expense.delete()
+
+    return redirect("expense_list")

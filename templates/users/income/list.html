@@ -1,0 +1,129 @@
+{% extends 'users/base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>Income</h3>
+
+    <div class="d-flex gap-2">
+        <a href="{% url 'income_add' %}" class="btn btn-primary d-flex align-items-center gap-2">
+            <i class="bi bi-plus-circle"></i> Add Income
+        </a>
+    </div>
+</div>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Date</th>
+            <th>Category</th>
+            <th>Amount</th>
+            <th>Description</th>
+            <th>Created</th>
+            <th>Updated</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        {% for income in incomes %}
+
+        <tr>
+
+            <td>{{ income.id }}</td>
+
+            <td>
+                {{ income.date|date:"d M Y" }}
+            </td>
+
+            <td>
+                {{ income.category.name }}
+            </td>
+
+            <td>
+                ₹{{ income.amount }}
+            </td>
+
+            <td>
+                {{ income.description|default:"-" }}
+            </td>
+
+            <td>
+                {{ income.created_at|date:"d M Y" }}<br>
+                <small class="text-muted">
+                    {{ income.created_at|timesince }} ago
+                </small>
+            </td>
+
+            <td>
+                {{ income.updated_at|date:"d M Y" }}<br>
+                <small class="text-muted">
+                    {{ income.updated_at|timesince }} ago
+                </small>
+            </td>
+
+            <td>
+
+                <a href="{% url 'income_edit' income.id %}" class="btn btn-warning btn-sm">
+                    Edit
+                </a>
+
+                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                    data-bs-target="#deleteModal{{ income.id }}">
+                    Delete
+                </button>
+
+            </td>
+
+        </tr>
+
+        <!-- Delete Modal -->
+        <div class="modal fade" id="deleteModal{{ income.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title">Delete Income</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal">
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                        Are you sure you want to delete this income?
+                    </div>
+
+                    <div class="modal-footer">
+
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                        <form method="post" action="{% url 'income_delete' income.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                Delete
+                            </button>
+                        </form>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        {% empty %}
+
+        <tr>
+            <td colspan="8" class="text-center">
+                No income records found.
+            </td>
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+</table>
+
+{% endblock %}

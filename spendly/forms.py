@@ -142,3 +142,50 @@ class IncomeForm(forms.ModelForm):
                 "type": "date",
             }),
         }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["category"].empty_label = "-- Select Category --"
+        self.fields["category"].queryset = IncomeCategory.objects.filter(
+            is_active=True
+        ).order_by("name")
+        
+
+class ExpenseForm(forms.ModelForm):
+
+    class Meta:
+        model = Expense
+        fields = [
+            "category",
+            "amount",
+            "description",
+            "date",
+        ]
+
+        widgets = {
+            "category": forms.Select(attrs={
+                "class": "form-select",
+            }),
+            "amount": forms.NumberInput(attrs={
+                "class": "form-control",
+                "placeholder": "Enter amount",
+                "min": "0",
+                "step": "0.01",
+            }),
+            "description": forms.Textarea(attrs={
+                "class": "form-control",
+                "rows": 3,
+                "placeholder": "Description (Optional)",
+            }),
+            "date": forms.DateInput(attrs={
+                "class": "form-control",
+                "type": "date",
+            }),
+        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["category"].empty_label = "-- Select Category --"
+        self.fields["category"].queryset = ExpenseCategory.objects.filter(
+            is_active=True
+        ).order_by("name")

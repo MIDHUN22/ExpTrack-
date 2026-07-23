@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect,get_object_or_404
-from .forms import RegisterForm, LoginForm,IncomeCategoryForm, ExpenseCategoryForm, UserEditForm
+from .forms import RegisterForm, LoginForm,IncomeCategoryForm, ExpenseCategoryForm, UserEditForm,IncomeForm,ExpenseForm
 from django.db.models import Sum
 from .utils import export_to_csv
 from .models import User,IncomeCategory,ExpenseCategory,Income,Expense
@@ -77,12 +77,32 @@ def register(request):
     return render(request, "auth/register.html", {"form": form})
 
 
-@login_required(login_url='login')
+@login_required(login_url="login")
 def dashboard(request):
-    return render(request, "dashboard.html", {
 
-    })
+    total_income = (
+        Income.objects.filter(user=request.user)
+        .aggregate(total=Sum("amount"))["total"]
+        or Decimal("0.00")
+    )
 
+    total_expense = (
+        Expense.objects.filter(user=request.user)
+        .aggregate(total=Sum("amount"))["total"]
+        or Decimal("0.00")
+    )
+
+    total_balance = total_income - total_expense
+
+    return render(
+        request,
+        "users/dashboard.html",
+        {
+            "total_income": total_income,
+            "total_expense": total_expense,
+            "total_balance": total_balance,
+        },
+    )
 @login_required(login_url="login")
 
 def adminDashboard(request):
@@ -422,7 +442,7 @@ def income(request):
 
     return render(
         request,
-        "user/income/list.html",
+        "users/income/list.html",
         {"incomes":incomes}
     )
     pass
@@ -441,7 +461,7 @@ def income_add(request):
         form=IncomeForm()
     return render(
         request,
-        'user/income/form.html',
+        'users/income/form.html',
         {"form":form}
         )
     
@@ -459,7 +479,7 @@ def income_edit(request,id):
         form=IncomeForm(instance=income)
     return render(
         request,
-        "user/income/form.html",
+        "users/income/form.html",
         {"form":form}
     )
     
@@ -474,7 +494,7 @@ def income_delete(request,id):
 
     return render(
         request,
-        "user/income/list.html",
+        "users/income/list.html",
         {"income":income}
     )
     
@@ -487,7 +507,7 @@ def expense(request):
 
     return render(
         request,
-        "user/expense/list.html",
+        "users/expense/list.html",
         {"expenses": expenses}
     )
 
@@ -510,7 +530,7 @@ def expense_add(request):
 
     return render(
         request,
-        "user/expense/form.html",
+        "users/expense/form.html",
         {"form": form}
     )
 
@@ -536,13 +556,13 @@ def expense_edit(request, id):
 
     return render(
         request,
-        "user/expense/form.html",
+        "users/expense/form.html",
         {"form": form}
     )
 
 
 @login_required(login_url="login")
-def expense_delete(request, id):
+def expense_delete(request,id):
 
     expense = get_object_or_404(
         Expense,
